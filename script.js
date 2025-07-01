@@ -8,6 +8,9 @@ const areaSizeSelect = document.getElementById("areaSize");
 let img = new Image();
 let imgLoaded = false;
 let areaSize = parseInt(areaSizeSelect.value);
+let displayScale = 1;
+let imageCanvas = document.createElement('canvas');
+let imageCtx = imageCanvas.getContext('2d');
 
 imageUpload.addEventListener("change", (e) => {
   const file = e.target.files[0];
@@ -21,9 +24,27 @@ imageUpload.addEventListener("change", (e) => {
 });
 
 img.onload = function () {
-  canvas.width = img.width;
-  canvas.height = img.height;
-  ctx.drawImage(img, 0, 0);
+  let drawWidth = img.width;
+  let drawHeight = img.height;
+
+  if (drawWidth > 1024 || drawHeight > 1024) {
+    const scale = 1024 / Math.max(drawWidth, drawHeight);
+    drawWidth = Math.round(drawWidth * scale);
+    drawHeight = Math.round(drawHeight * scale);
+    displayScale = scale;
+  } else {
+    displayScale = 1;
+  }
+
+  canvas.width = drawWidth;
+  canvas.height = drawHeight;
+  imageCanvas.width = drawWidth;
+  imageCanvas.height = drawHeight;
+
+  imageCtx.clearRect(0, 0, drawWidth, drawHeight);
+  imageCtx.drawImage(img, 0, 0, drawWidth, drawHeight);
+  ctx.drawImage(img, 0, 0, drawWidth, drawHeight);
+
   imgLoaded = true;
 };
 
@@ -39,7 +60,7 @@ canvas.addEventListener("mousemove", (e) => {
   const startY = Math.max(0, y - halfSize);
   const size = Math.min(areaSize, canvas.width - startX, canvas.height - startY);
 
-  const imgData = ctx.getImageData(startX, startY, size, size);
+  const imgData = imageCtx.getImageData(startX, startY, size, size);
   const data = imgData.data;
 
   let rSum = 0, gSum = 0, bSum = 0;
@@ -63,6 +84,11 @@ canvas.addEventListener("mousemove", (e) => {
 
   const brightness = 0.2126 * rLin + 0.7152 * gLin + 0.0722 * bLin;
   brightnessEl.textContent = brightness.toFixed(3);
+
+  ctx.drawImage(imageCanvas, 0, 0);
+  ctx.strokeStyle = "red";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(startX, startY, size, size);
 });
 
 function srgbToLinear(c) {
