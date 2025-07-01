@@ -110,6 +110,39 @@ canvas.addEventListener("mousemove", (e) => {
   ctx.drawImage(imageCanvas, 0, 0);
   ctx.strokeStyle = "red";
   ctx.lineWidth = 1;
+  
+  const showOverlay = document.getElementById("showOverlay").checked;
+  if (showOverlay) {
+    const overlayImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const overlayData = overlayImage.data;
+    const imgFull = imageCtx.getImageData(0, 0, canvas.width, canvas.height).data;
+    const minRange = parseFloat(document.getElementById("minRange").value);
+    const maxRange = parseFloat(document.getElementById("maxRange").value);
+    for (let y = 0; y < canvas.height; y++) {
+      for (let x = 0; x < canvas.width; x++) {
+        const index = (y * canvas.width + x) * 4;
+        const r = imgFull[index] / 255;
+        const g = imgFull[index + 1] / 255;
+        const b = imgFull[index + 2] / 255;
+        const rLin = srgbToLinear(r);
+        const gLin = srgbToLinear(g);
+        const bLin = srgbToLinear(b);
+        const bright = 0.2126 * rLin + 0.7152 * gLin + 0.0722 * bLin;
+        if (bright < minRange) {
+          overlayData[index] = 255;
+          overlayData[index + 1] = 128;
+          overlayData[index + 2] = 128;
+          overlayData[index + 3] = 100;
+        } else if (bright > maxRange) {
+          overlayData[index] = 216;
+          overlayData[index + 1] = 191;
+          overlayData[index + 2] = 255;
+          overlayData[index + 3] = 100;
+        }
+      }
+    }
+    ctx.putImageData(overlayImage, 0, 0);
+  }
   ctx.strokeRect(startX, startY, size, size);
 });
 
