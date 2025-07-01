@@ -27,7 +27,7 @@
   </div>
 
   <p id="explanation">
-    <em>Albedo Brightness is calculated by converting the average sRGB color to linear space using the standard sRGB transfer function, then computing the luminance using Rec. 709 coefficients. This matches the approach used by Unreal Engine for physically accurate lighting.</em>
+    <em>Albedo Brightness is calculated by converting each sRGB pixel to linear RGB using the standard sRGB transfer function, then computing the average luminance using Rec. 709 coefficients. This matches how Unreal Engine interprets albedo textures in physically-based rendering.</em>
   </p>
 
   <script src="script.js"></script>
