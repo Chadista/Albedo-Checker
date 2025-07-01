@@ -1,72 +1,108 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Albedo Brightness Checker</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Albedo Checker</title>
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
   <h1>Albedo Brightness Checker</h1>
-  <input type="file" id="upload" accept="image/*">
-  <div style="display: flex; margin-top: 20px;">
-    <div style="flex: 1;">
-      <canvas id="canvas"></canvas>
-      <div style="margin-top: 8px;">
-        <strong>Albedo Brightness:</strong> <span id="brightness">-</span>
-        <span id="status" style="margin-left: 10px; font-weight: bold; display: inline-block;">&nbsp;</span>
-        <div id="materialSuggestion" style="margin-top: 8px; font-style: italic; color: #555;"></div>
-      </div>
+
+  <input type="file" id="imageUpload" accept="image/*" />
+  <label for="areaSize">Sample Area Size:</label>
+  <select id="areaSize">
+    <option value="8">8×8</option>
+    <option value="16">16×16</option>
+    <option value="32">32×32</option>
+    <option value="64" selected>64×64</option>
+    <option value="128">128×128</option>
+  </select>
+
+  <label for="minRange">Min Brightness:</label>
+<input type="number" id="minRange" value="0.03" step="0.001" style="width: 80px;">
+<label for="maxRange" style="margin-left: 10px;">Max Brightness:</label>
+<input type="number" id="maxRange" value="0.8" step="0.001" style="width: 80px;">
+<br><label style="margin-top: 10px; display: block;">
+  <input type="checkbox" id="showOverlay"> Show Out-of-Range Overlay
+</label>
+
+<br><br>
+
+<div style="display: flex; margin-top: 20px;">
+  <div style="flex: 1;">
+    <canvas id="canvas"></canvas>
+  </div>
+  <div style="width: 280px; margin-left: 20px;">
+    <button onclick="toggleInfo()" style="padding: 6px 12px; font-size: 14px; display: flex; align-items: center;">
+      <span style="color: #007BFF; font-weight: bold; margin-right: 6px;">&#x26A0;</span> PBR Compliance ▾
+    </button>
+    <div id="pbrInfo" style="display: none; margin-top: 10px; border-left: 4px solid #ccc; padding-left: 10px;">
+      <p><strong>Why PBR Accuracy Matters</strong></p>
+      <p>In physically-based rendering (PBR), accurate albedo values ensure that materials interact correctly with lighting in real-time engines like Unreal Engine or Unity.</p>
+      <p>Albedo controls how much light a surface reflects. Values that are too dark or too bright can break physical realism, cause blown-out highlights, or incorrect ambient lighting behavior.</p>
+
+      <p><strong>Recommended Brightness Range</strong></p>
+      <ul>
+        <li><strong>Minimum:</strong> 0.03 — Based on charcoal, the darkest known natural substance</li>
+        <li><strong>Maximum:</strong> 0.8 — Based on snow, one of the brightest naturally occurring materials</li>
+      </ul>
+      <p>This range helps maintain consistency and realism across assets and lighting conditions.</p>
     </div>
-    <div style="width: 280px; margin-left: 20px;">
-      <button onclick="toggleInfo()" style="padding: 6px 12px; font-size: 14px; display: flex; align-items: center;">
-        <span style="color: #007BFF; font-weight: bold; margin-right: 6px;">&#x26A0;</span> PBR Compliance ▾
-      </button>
-      <div id="pbrInfo" style="display: none; margin-top: 10px; border-left: 4px solid #ccc; padding-left: 10px;">
-        <p><strong>Why PBR Accuracy Matters</strong></p>
-        <p>In physically-based rendering (PBR), accurate albedo values ensure that materials interact correctly with lighting in real-time engines like Unreal Engine or Unity.</p>
-        <p>Albedo controls how much light a surface reflects. Values that are too dark or too bright can break physical realism, cause blown-out highlights, or incorrect ambient lighting behavior.</p>
-        <p><strong>Recommended Brightness Range</strong></p>
-        <ul>
-          <li><strong>Minimum:</strong> 0.03 — Based on charcoal, the darkest known natural substance</li>
-          <li><strong>Maximum:</strong> 0.8 — Based on snow, one of the brightest naturally occurring materials</li>
-        </ul>
-        <p>This range helps maintain consistency and realism across assets and lighting conditions.</p>
-      </div>
-      <button onclick="toggleSettings()" style="padding: 6px 12px; font-size: 14px; margin-top: 20px;">Settings ▾</button>
-      <div id="settingsPanel" style="display: none; margin-top: 10px; border-left: 4px solid #ccc; padding-left: 10px;">
-        <label for="minRange">Min Brightness:</label>
-        <input type="number" id="minRange" value="0.03" step="0.001" style="width: 80px;"><br>
-        <label for="maxRange" style="margin-top: 10px;">Max Brightness:</label>
-        <input type="number" id="maxRange" value="0.8" step="0.001" style="width: 80px;">
-        <br><label style="margin-top: 10px; display: block;">
-          <input type="checkbox" id="showOverlay"> Show Out-of-Range Overlay
-        </label>
-      </div>
+
+    <button onclick="toggleSettings()" style="padding: 6px 12px; font-size: 14px; margin-top: 20px;">Settings ▾</button>
+    <div id="settingsPanel" style="display: none; margin-top: 10px; border-left: 4px solid #ccc; padding-left: 10px;">
+      <label for="minRange">Min Brightness:</label>
+      <input type="number" id="minRange" value="0.03" step="0.001" style="width: 80px;"><br>
+      <label for="maxRange" style="margin-top: 10px;">Max Brightness:</label>
+      <input type="number" id="maxRange" value="0.8" step="0.001" style="width: 80px;">
+<br><label style="margin-top: 10px; display: block;">
+  <input type="checkbox" id="showOverlay"> Show Out-of-Range Overlay
+</label>
+
     </div>
   </div>
+</div>
+
+<script>
+function toggleInfo() {
+  const info = document.getElementById("pbrInfo");
+  const button = event.currentTarget;
+  if (info.style.display === "none") {
+    info.style.display = "block";
+    button.textContent = "\u26A0 PBR Compliance ▴";
+  } else {
+    info.style.display = "none";
+    button.textContent = "\u26A0 PBR Compliance ▾";
+  }
+}
+function toggleSettings() {
+  const panel = document.getElementById("settingsPanel");
+  const button = event.currentTarget;
+  if (panel.style.display === "none") {
+    panel.style.display = "block";
+    button.textContent = "Settings ▴";
+  } else {
+    panel.style.display = "none";
+    button.textContent = "Settings ▾";
+  }
+}
+</script>
+
+
+  <div id="info">
+    <p><strong>Avg sRGB:</strong> <span id="avgRGB">-</span></p>
+    <p><strong>Albedo Brightness:</strong> 
+  <span id="brightness">-</span>
+  <span id="status" style="margin-left: 10px; font-weight: bold; display: inline-block;">&nbsp;</span>
+<div id="materialSuggestion" style="margin-top: 8px; font-style: italic; color: #555;"></div>
+</p>
+  </div>
+
+  <p id="explanation">
+    <em>Albedo Brightness is calculated by converting each sRGB pixel to linear RGB using the standard sRGB transfer function, then computing the average luminance using Rec. 709 coefficients. This matches how Unreal Engine interprets albedo textures in physically-based rendering.</em>
+  </p>
+
   <script src="script.js"></script>
-  <script>
-    function toggleInfo() {
-      const info = document.getElementById("pbrInfo");
-      const button = event.currentTarget;
-      if (info.style.display === "none") {
-        info.style.display = "block";
-        button.textContent = "\u26A0 PBR Compliance ▴";
-      } else {
-        info.style.display = "none";
-        button.textContent = "\u26A0 PBR Compliance ▾";
-      }
-    }
-    function toggleSettings() {
-      const panel = document.getElementById("settingsPanel");
-      const button = event.currentTarget;
-      if (panel.style.display === "none") {
-        panel.style.display = "block";
-        button.textContent = "Settings ▴";
-      } else {
-        panel.style.display = "none";
-        button.textContent = "Settings ▾";
-      }
-    }
-  </script>
 </body>
 </html>

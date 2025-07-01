@@ -1,111 +1,101 @@
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
-const imageCanvas = document.createElement("canvas");
-const imageCtx = imageCanvas.getContext("2d");
+const imageUpload = document.getElementById("imageUpload");
+const avgRGBEl = document.getElementById("avgRGB");
 const brightnessEl = document.getElementById("brightness");
-const statusEl = document.getElementById("status");
-const upload = document.getElementById("upload");
+const areaSizeSelect = document.getElementById("areaSize");
 
 let img = new Image();
-let size = 64;
+let imgLoaded = false;
+let areaSize = parseInt(areaSizeSelect.value);
+let displayScale = 1;
+let imageCanvas = document.createElement('canvas');
+let imageCtx = imageCanvas.getContext('2d');
 
-upload.addEventListener("change", (e) => {
+imageUpload.addEventListener("change", (e) => {
   const file = e.target.files[0];
   if (!file) return;
+
   const reader = new FileReader();
-  reader.onload = (event) => {
-    img.onload = () => {
-      const scale = Math.min(1024 / img.width, 1024 / img.height, 1);
-      canvas.width = imageCanvas.width = Math.floor(img.width * scale);
-      canvas.height = imageCanvas.height = Math.floor(img.height * scale);
-      imageCtx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      draw();
-    };
-    img.src = event.target.result;
+  reader.onload = function (evt) {
+    img.src = evt.target.result;
   };
   reader.readAsDataURL(file);
 });
 
-canvas.addEventListener("mousemove", (e) => {
-  draw();
-  const rect = canvas.getBoundingClientRect();
-  const x = Math.floor((e.clientX - rect.left));
-  const y = Math.floor((e.clientY - rect.top));
-  drawSampleRect(x, y);
-});
+img.onload = function () {
+  let drawWidth = img.width;
+  let drawHeight = img.height;
 
-function draw() {
-  ctx.drawImage(imageCanvas, 0, 0);
-  const showOverlay = document.getElementById("showOverlay").checked;
-  if (showOverlay) {
-    const overlay = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const original = imageCtx.getImageData(0, 0, canvas.width, canvas.height).data;
-    const minRange = parseFloat(document.getElementById("minRange").value);
-    const maxRange = parseFloat(document.getElementById("maxRange").value);
-
-    for (let y = 0; y < canvas.height; y++) {
-      for (let x = 0; x < canvas.width; x++) {
-        const index = (y * canvas.width + x) * 4;
-        const r = original[index] / 255;
-        const g = original[index + 1] / 255;
-        const b = original[index + 2] / 255;
-        const rLin = srgbToLinear(r);
-        const gLin = srgbToLinear(g);
-        const bLin = srgbToLinear(b);
-        const bright = 0.2126 * rLin + 0.7152 * gLin + 0.0722 * bLin;
-
-        if (bright < minRange) {
-          overlay.data[index] = 255;
-          overlay.data[index + 1] = 0;
-          overlay.data[index + 2] = 0;
-          overlay.data[index + 3] = 178;
-        } else if (bright > maxRange) {
-          overlay.data[index] = 128;
-          overlay.data[index + 1] = 0;
-          overlay.data[index + 2] = 128;
-          overlay.data[index + 3] = 178;
-        }
-      }
-    }
-    ctx.putImageData(overlay, 0, 0);
+  if (drawWidth > 1024 || drawHeight > 1024) {
+    const scale = 1024 / Math.max(drawWidth, drawHeight);
+    drawWidth = Math.round(drawWidth * scale);
+    drawHeight = Math.round(drawHeight * scale);
+    displayScale = scale;
+  } else {
+    displayScale = 1;
   }
-}
 
-function drawSampleRect(x, y) {
-  const startX = Math.max(0, Math.min(canvas.width - size, x - size / 2));
-  const startY = Math.max(0, Math.min(canvas.height - size, y - size / 2));
-  const imageData = imageCtx.getImageData(startX, startY, size, size);
-  const data = imageData.data;
+  canvas.width = drawWidth;
+  canvas.height = drawHeight;
+  imageCanvas.width = drawWidth;
+  imageCanvas.height = drawHeight;
 
-  let rSum = 0, gSum = 0, bSum = 0;
-  const pixelCount = size * size;
+  imageCtx.clearRect(0, 0, drawWidth, drawHeight);
+  imageCtx.drawImage(img, 0, 0, drawWidth, drawHeight);
+  ctx.drawImage(img, 0, 0, drawWidth, drawHeight);
+
+  imgLoaded = true;
+};
+
+canvas.addEventListener("mousemove", (e) => {
+  if (!imgLoaded) return;
+
+  const rect = canvas.getBoundingClientRect();
+  const x = Math.floor(e.clientX - rect.left);
+  const y = Math.floor(e.clientY - rect.top);
+
+  const halfSize = areaSize / 2;
+  const startX = Math.max(0, x - halfSize);
+  const startY = Math.max(0, y - halfSize);
+  const size = Math.min(areaSize, canvas.width - startX, canvas.height - startY);
+
+  const imgData = imageCtx.getImageData(startX, startY, size, size);
+  const data = imgData.data;
+
+  let rSrgbSum = 0, gSrgbSum = 0, bSrgbSum = 0;
+  let rLinSum = 0, gLinSum = 0, bLinSum = 0;
+  const totalPixels = size * size;
 
   for (let i = 0; i < data.length; i += 4) {
-    const r = data[i] / 255;
-    const g = data[i + 1] / 255;
-    const b = data[i + 2] / 255;
-    rSum += srgbToLinear(r);
-    gSum += srgbToLinear(g);
-    bSum += srgbToLinear(b);
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+
+    const rNorm = r / 255;
+    const gNorm = g / 255;
+    const bNorm = b / 255;
+
+    rSrgbSum += r;
+    gSrgbSum += g;
+    bSrgbSum += b;
+
+    rLinSum += srgbToLinear(rNorm);
+    gLinSum += srgbToLinear(gNorm);
+    bLinSum += srgbToLinear(bNorm);
   }
 
-  const rAvg = rSum / pixelCount;
-  const gAvg = gSum / pixelCount;
-  const bAvg = bSum / pixelCount;
+  const rAvg = rSrgbSum / totalPixels;
+  const gAvg = gSrgbSum / totalPixels;
+  const bAvg = bSrgbSum / totalPixels;
+  avgRGBEl.textContent = `${rAvg.toFixed(1)}, ${gAvg.toFixed(1)}, ${bAvg.toFixed(1)}`;
 
-  const brightness = 0.2126 * rAvg + 0.7152 * gAvg + 0.0722 * bAvg;
+  const rLinAvg = rLinSum / totalPixels;
+  const gLinAvg = gLinSum / totalPixels;
+  const bLinAvg = bLinSum / totalPixels;
+
+  const brightness = 0.2126 * rLinAvg + 0.7152 * gLinAvg + 0.0722 * bLinAvg;
   brightnessEl.textContent = brightness.toFixed(4);
-
-  const min = parseFloat(document.getElementById("minRange").value);
-  const max = parseFloat(document.getElementById("maxRange").value);
-  if (brightness < min || brightness > max) {
-    statusEl.textContent = "Out of range";
-    statusEl.style.color = "#F08080";
-  } else {
-    statusEl.textContent = "In range";
-    statusEl.style.color = "#4CAF50";
-  }
-
   const suggestionEl = document.getElementById("materialSuggestion");
   if (brightness < 0.04) {
     suggestionEl.textContent = "Suggested: Charcoal, soot, black rubber";
@@ -123,11 +113,62 @@ function drawSampleRect(x, y) {
     suggestionEl.textContent = "Suggested: Too bright – clamp or recheck";
   }
 
-  ctx.strokeStyle = "rgba(255, 255, 255, 1)";
+  const statusEl = document.getElementById("status");
+  const minRange = parseFloat(document.getElementById("minRange").value);
+  const maxRange = parseFloat(document.getElementById("maxRange").value);
+  if (brightness >= minRange && brightness <= maxRange) {
+    statusEl.textContent = "✔ In range";
+    statusEl.style.color = "#4CAF50";
+  } else {
+    statusEl.textContent = "✖ Out of range";
+    statusEl.style.color = "#F08080";
+  }
+
+  ctx.drawImage(imageCanvas, 0, 0);
+  ctx.strokeStyle = "red";
   ctx.lineWidth = 1;
+  
+  const showOverlay = document.getElementById("showOverlay").checked;
+  if (showOverlay) {
+    const overlayImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const overlayData = overlayImage.data;
+    const imgFull = imageCtx.getImageData(0, 0, canvas.width, canvas.height).data;
+    const minRange = parseFloat(document.getElementById("minRange").value);
+    const maxRange = parseFloat(document.getElementById("maxRange").value);
+    for (let y = 0; y < canvas.height; y++) {
+      for (let x = 0; x < canvas.width; x++) {
+        const index = (y * canvas.width + x) * 4;
+        const r = imgFull[index] / 255;
+        const g = imgFull[index + 1] / 255;
+        const b = imgFull[index + 2] / 255;
+        const rLin = srgbToLinear(r);
+        const gLin = srgbToLinear(g);
+        const bLin = srgbToLinear(b);
+        const bright = 0.2126 * rLin + 0.7152 * gLin + 0.0722 * bLin;
+        if (bright < minRange) {
+          const check = ((x >> 2) + (y >> 2)) % 2 === 0;
+          overlayData[index] = check ? 255 : 255;
+          overlayData[index + 1] = check ? 0 : 255;
+          overlayData[index + 2] = check ? 0 : 255;
+          overlayData[index + 3] = 178;
+        } else if (bright > maxRange) {
+          const check = ((x >> 2) + (y >> 2)) % 2 === 0;
+          overlayData[index] = check ? 128 : 255;
+          overlayData[index + 1] = check ? 0 : 255;
+          overlayData[index + 2] = check ? 128 : 255;
+          overlayData[index + 3] = 178;
+        }
+      }
+    }
+    ctx.putImageData(overlayImage, 0, 0);
+  }
   ctx.strokeRect(startX, startY, size, size);
-}
+});
 
 function srgbToLinear(c) {
   return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
 }
+
+areaSizeSelect.addEventListener("change", () => {
+  areaSize = parseInt(areaSizeSelect.value);
+});
