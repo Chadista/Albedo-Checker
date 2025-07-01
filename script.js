@@ -96,6 +96,23 @@ canvas.addEventListener("mousemove", (e) => {
 
   const brightness = 0.2126 * rLinAvg + 0.7152 * gLinAvg + 0.0722 * bLinAvg;
   brightnessEl.textContent = brightness.toFixed(4);
+  const suggestionEl = document.getElementById("materialSuggestion");
+  if (brightness < 0.04) {
+    suggestionEl.textContent = "Suggested: Charcoal, soot, black rubber";
+  } else if (brightness < 0.1) {
+    suggestionEl.textContent = "Suggested: Asphalt, dark fabric, soil";
+  } else if (brightness < 0.2) {
+    suggestionEl.textContent = "Suggested: Wood, leather, concrete";
+  } else if (brightness < 0.4) {
+    suggestionEl.textContent = "Suggested: Dry sand, bricks, skin tones";
+  } else if (brightness < 0.6) {
+    suggestionEl.textContent = "Suggested: Painted surfaces, plastic, cloth";
+  } else if (brightness < 0.8) {
+    suggestionEl.textContent = "Suggested: Snow, paper, light stone";
+  } else {
+    suggestionEl.textContent = "Suggested: Too bright – clamp or recheck";
+  }
+
   const statusEl = document.getElementById("status");
   const minRange = parseFloat(document.getElementById("minRange").value);
   const maxRange = parseFloat(document.getElementById("maxRange").value);
@@ -129,14 +146,16 @@ canvas.addEventListener("mousemove", (e) => {
         const bLin = srgbToLinear(b);
         const bright = 0.2126 * rLin + 0.7152 * gLin + 0.0722 * bLin;
         if (bright < minRange) {
-          overlayData[index] = 255;
-          overlayData[index + 1] = 0;
-          overlayData[index + 2] = 0;
+          const check = ((x >> 2) + (y >> 2)) % 2 === 0;
+          overlayData[index] = check ? 255 : 255;
+          overlayData[index + 1] = check ? 0 : 255;
+          overlayData[index + 2] = check ? 0 : 255;
           overlayData[index + 3] = 178;
         } else if (bright > maxRange) {
-          overlayData[index] = 128;
-          overlayData[index + 1] = 0;
-          overlayData[index + 2] = 128;
+          const check = ((x >> 2) + (y >> 2)) % 2 === 0;
+          overlayData[index] = check ? 128 : 255;
+          overlayData[index + 1] = check ? 0 : 255;
+          overlayData[index + 2] = check ? 128 : 255;
           overlayData[index + 3] = 178;
         }
       }
