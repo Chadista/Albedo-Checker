@@ -130,14 +130,14 @@ canvas.addEventListener("mousemove", (e) => {
         const bright = 0.2126 * rLin + 0.7152 * gLin + 0.0722 * bLin;
         if (bright < minRange) {
           overlayData[index] = 255;
-          overlayData[index + 1] = 128;
-          overlayData[index + 2] = 128;
-          overlayData[index + 3] = 100;
+          overlayData[index + 1] = 0;
+          overlayData[index + 2] = 0;
+          overlayData[index + 3] = 178;
         } else if (bright > maxRange) {
-          overlayData[index] = 216;
-          overlayData[index + 1] = 191;
-          overlayData[index + 2] = 255;
-          overlayData[index + 3] = 100;
+          overlayData[index] = 128;
+          overlayData[index + 1] = 0;
+          overlayData[index + 2] = 128;
+          overlayData[index + 3] = 178;
         }
       }
     }
