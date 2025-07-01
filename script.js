@@ -72,13 +72,17 @@ canvas.addEventListener("mousemove", (e) => {
     const g = data[i + 1];
     const b = data[i + 2];
 
+    const rNorm = r / 255;
+    const gNorm = g / 255;
+    const bNorm = b / 255;
+
     rSrgbSum += r;
     gSrgbSum += g;
     bSrgbSum += b;
 
-    rLinSum += srgbToLinear(r);
-    gLinSum += srgbToLinear(g);
-    bLinSum += srgbToLinear(b);
+    rLinSum += srgbToLinear(rNorm);
+    gLinSum += srgbToLinear(gNorm);
+    bLinSum += srgbToLinear(bNorm);
   }
 
   const rAvg = rSrgbSum / totalPixels;
@@ -100,7 +104,6 @@ canvas.addEventListener("mousemove", (e) => {
 });
 
 function srgbToLinear(c) {
-  c /= 255;
   return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
 }
 
