@@ -63,26 +63,34 @@ canvas.addEventListener("mousemove", (e) => {
   const imgData = imageCtx.getImageData(startX, startY, size, size);
   const data = imgData.data;
 
-  let rSum = 0, gSum = 0, bSum = 0;
+  let rSrgbSum = 0, gSrgbSum = 0, bSrgbSum = 0;
+  let rLinSum = 0, gLinSum = 0, bLinSum = 0;
   const totalPixels = size * size;
 
   for (let i = 0; i < data.length; i += 4) {
-    rSum += data[i];
-    gSum += data[i + 1];
-    bSum += data[i + 2];
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+
+    rSrgbSum += r;
+    gSrgbSum += g;
+    bSrgbSum += b;
+
+    rLinSum += srgbToLinear(r);
+    gLinSum += srgbToLinear(g);
+    bLinSum += srgbToLinear(b);
   }
 
-  const rAvg = rSum / totalPixels;
-  const gAvg = gSum / totalPixels;
-  const bAvg = bSum / totalPixels;
-
+  const rAvg = rSrgbSum / totalPixels;
+  const gAvg = gSrgbSum / totalPixels;
+  const bAvg = bSrgbSum / totalPixels;
   avgRGBEl.textContent = `${rAvg.toFixed(1)}, ${gAvg.toFixed(1)}, ${bAvg.toFixed(1)}`;
 
-  const rLin = srgbToLinear(rAvg);
-  const gLin = srgbToLinear(gAvg);
-  const bLin = srgbToLinear(bAvg);
+  const rLinAvg = rLinSum / totalPixels;
+  const gLinAvg = gLinSum / totalPixels;
+  const bLinAvg = bLinSum / totalPixels;
 
-  const brightness = 0.2126 * rLin + 0.7152 * gLin + 0.0722 * bLin;
+  const brightness = 0.2126 * rLinAvg + 0.7152 * gLinAvg + 0.0722 * bLinAvg;
   brightnessEl.textContent = brightness.toFixed(4);
 
   ctx.drawImage(imageCanvas, 0, 0);
