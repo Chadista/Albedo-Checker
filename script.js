@@ -97,12 +97,14 @@ canvas.addEventListener("mousemove", (e) => {
   const brightness = 0.2126 * rLinAvg + 0.7152 * gLinAvg + 0.0722 * bLinAvg;
   brightnessEl.textContent = brightness.toFixed(4);
   const statusEl = document.getElementById("status");
-  if (brightness >= 0.03 && brightness <= 0.08) {
+  const minRange = parseFloat(document.getElementById("minRange").value);
+  const maxRange = parseFloat(document.getElementById("maxRange").value);
+  if (brightness >= minRange && brightness <= maxRange) {
     statusEl.textContent = "✔ In range";
-    statusEl.style.color = "green";
+    statusEl.style.color = "#4CAF50";
   } else {
     statusEl.textContent = "✖ Out of range";
-    statusEl.style.color = "red";
+    statusEl.style.color = "#F08080";
   }
 
   ctx.drawImage(imageCanvas, 0, 0);
