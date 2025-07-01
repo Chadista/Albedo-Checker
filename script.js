@@ -83,7 +83,7 @@ canvas.addEventListener("mousemove", (e) => {
   const bLin = srgbToLinear(bAvg);
 
   const brightness = 0.2126 * rLin + 0.7152 * gLin + 0.0722 * bLin;
-  brightnessEl.textContent = brightness.toFixed(3);
+  brightnessEl.textContent = brightness.toFixed(4);
 
   ctx.drawImage(imageCanvas, 0, 0);
   ctx.strokeStyle = "red";

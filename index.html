@@ -23,8 +23,12 @@
 
   <div id="info">
     <p><strong>Avg sRGB:</strong> <span id="avgRGB">-</span></p>
-    <p><strong>Linear Brightness:</strong> <span id="brightness">-</span></p>
+    <p><strong>Albedo Brightness:</strong> <span id="brightness">-</span></p>
   </div>
+
+  <p id="explanation">
+    <em>Albedo Brightness is calculated by converting the average sRGB color to linear space using the standard sRGB transfer function, then computing the luminance using Rec. 709 coefficients. This matches the approach used by Unreal Engine for physically accurate lighting.</em>
+  </p>
 
   <script src="script.js"></script>
 </body>
