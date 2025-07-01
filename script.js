@@ -1,0 +1,75 @@
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const imageUpload = document.getElementById("imageUpload");
+const avgRGBEl = document.getElementById("avgRGB");
+const brightnessEl = document.getElementById("brightness");
+const areaSizeSelect = document.getElementById("areaSize");
+
+let img = new Image();
+let imgLoaded = false;
+let areaSize = parseInt(areaSizeSelect.value);
+
+imageUpload.addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function (evt) {
+    img.src = evt.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+img.onload = function () {
+  canvas.width = img.width;
+  canvas.height = img.height;
+  ctx.drawImage(img, 0, 0);
+  imgLoaded = true;
+};
+
+canvas.addEventListener("mousemove", (e) => {
+  if (!imgLoaded) return;
+
+  const rect = canvas.getBoundingClientRect();
+  const x = Math.floor(e.clientX - rect.left);
+  const y = Math.floor(e.clientY - rect.top);
+
+  const halfSize = areaSize / 2;
+  const startX = Math.max(0, x - halfSize);
+  const startY = Math.max(0, y - halfSize);
+  const size = Math.min(areaSize, canvas.width - startX, canvas.height - startY);
+
+  const imgData = ctx.getImageData(startX, startY, size, size);
+  const data = imgData.data;
+
+  let rSum = 0, gSum = 0, bSum = 0;
+  const totalPixels = size * size;
+
+  for (let i = 0; i < data.length; i += 4) {
+    rSum += data[i];
+    gSum += data[i + 1];
+    bSum += data[i + 2];
+  }
+
+  const rAvg = rSum / totalPixels;
+  const gAvg = gSum / totalPixels;
+  const bAvg = bSum / totalPixels;
+
+  avgRGBEl.textContent = `${rAvg.toFixed(1)}, ${gAvg.toFixed(1)}, ${bAvg.toFixed(1)}`;
+
+  const rLin = srgbToLinear(rAvg);
+  const gLin = srgbToLinear(gAvg);
+  const bLin = srgbToLinear(bAvg);
+
+  const brightness = 0.2126 * rLin + 0.7152 * gLin + 0.0722 * bLin;
+  brightnessEl.textContent = brightness.toFixed(3);
+});
+
+function srgbToLinear(c) {
+  c /= 255;
+  return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+}
+
+areaSizeSelect.addEventListener("change", () => {
+  areaSize = parseInt(areaSizeSelect.value);
+});

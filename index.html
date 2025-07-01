@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Albedo Checker</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <h1>Albedo Brightness Checker</h1>
+
+  <input type="file" id="imageUpload" accept="image/*" />
+  <label for="areaSize">Sample Area Size:</label>
+  <select id="areaSize">
+    <option value="8">8×8</option>
+    <option value="16">16×16</option>
+    <option value="32">32×32</option>
+    <option value="64" selected>64×64</option>
+    <option value="128">128×128</option>
+  </select>
+
+  <canvas id="canvas"></canvas>
+
+  <div id="info">
+    <p><strong>Avg sRGB:</strong> <span id="avgRGB">-</span></p>
+    <p><strong>Linear Brightness:</strong> <span id="brightness">-</span></p>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

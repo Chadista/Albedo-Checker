@@ -1,0 +1,16 @@
+body {
+  font-family: sans-serif;
+  text-align: center;
+  padding: 1em;
+}
+
+canvas {
+  border: 1px solid #ccc;
+  margin-top: 1em;
+  cursor: crosshair;
+}
+
+#info {
+  margin-top: 1em;
+  font-size: 1.2em;
+}
