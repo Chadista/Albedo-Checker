@@ -43,7 +43,6 @@ img.onload = function () {
 
   imageCtx.clearRect(0, 0, drawWidth, drawHeight);
   imageCtx.drawImage(img, 0, 0, drawWidth, drawHeight);
-  ctx.setTransform(displayScale, 0, 0, displayScale, originX, originY);
   ctx.drawImage(img, 0, 0, drawWidth, drawHeight);
 
   imgLoaded = true;
@@ -125,7 +124,6 @@ canvas.addEventListener("mousemove", (e) => {
     statusEl.style.color = "#F08080";
   }
 
-  ctx.setTransform(scale, 0, 0, scale, originX, originY);
   ctx.drawImage(imageCanvas, 0, 0);
   ctx.strokeStyle = "red";
   ctx.lineWidth = 1;
