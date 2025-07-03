@@ -1,26 +1,23 @@
-body.dark-theme {
+body {
   font-family: Arial, sans-serif;
-  background-color: #1e1e1e;
-  color: #e0e0e0;
-  margin: 0;
-  padding: 0;
-}
-canvas {
-  border: 1px solid #444;
-  margin: 20px;
-  background-color: #111;
-}
-#dropZone {
-  border: 2px dashed #666;
   padding: 20px;
-  margin-top: 10px;
-  color: #aaa;
-  text-align: center;
 }
-#dropZone.drag-hover {
-  border-color: #aaa;
-  color: #eee;
+
+canvas {
+  display: block;
+  margin-top: 20px;
+  border: 1px solid #ccc;
 }
-.hidden {
-  display: none;
+
+#info {
+  margin-top: 20px;
+  font-size: 18px;
+}
+
+#explanation {
+  max-width: 600px;
+  margin-top: 20px;
+  font-size: 14px;
+  color: #555;
+  font-style: italic;
 }
