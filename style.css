@@ -1,23 +1,99 @@
 body {
-  font-family: Arial, sans-serif;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background-color: #121212;
+  color: #e0e0e0;
+  margin: 0;
   padding: 20px;
+  line-height: 1.6;
+}
+
+h1 {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 30px;
+  color: #ffffff;
 }
 
 canvas {
   display: block;
-  margin-top: 20px;
-  border: 1px solid #ccc;
+  border: 1px solid #333;
+  max-width: 100%;
+  border-radius: 8px;
+  background-color: #1e1e1e;
+}
+
+input, select, button {
+  background-color: #1f1f1f;
+  color: #e0e0e0;
+  border: 1px solid #444;
+  padding: 8px 10px;
+  margin: 6px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+button {
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: #333;
 }
 
 #info {
   margin-top: 20px;
-  font-size: 18px;
+  font-size: 16px;
+  background-color: #1a1a1a;
+  padding: 10px;
+  border-radius: 6px;
+  border-left: 4px solid #888;
+}
+
+#materialSuggestion {
+  color: #bbb;
+  margin-top: 10px;
+  font-style: italic;
 }
 
 #explanation {
   max-width: 600px;
-  margin-top: 20px;
-  font-size: 14px;
-  color: #555;
+  margin: 30px auto 0;
+  font-size: 13px;
+  color: #999;
   font-style: italic;
+  text-align: center;
+}
+
+#settingsPanel,
+#pbrInfo {
+  background-color: #1a1a1a;
+  border-left: 4px solid #555;
+  padding: 12px;
+  margin-top: 12px;
+  border-radius: 6px;
+}
+
+.hidden {
+  display: none;
+}
+
+.drag-hover {
+  outline: 2px dashed #666;
+  border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+  #main {
+    flex-direction: column;
+  }
+
+  #main > div {
+    width: 100% !important;
+    margin-left: 0 !important;
+  }
+
+  canvas {
+    max-width: 100%;
+  }
 }
