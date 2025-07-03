@@ -10,10 +10,50 @@
   <header>
     <h1>Albedo Brightness Checker</h1>
   </header>
-  <!-- (rest of canvas HTML content already present above in canvas) -->
+
+  <section id="upload-panel">
+    <input type="file" id="imageUpload" accept="image/*" />
+    <div id="dropZone">Drag & drop your texture here</div>
+    <label for="areaSize">Sample Area Size:</label>
+    <select id="areaSize">
+      <option value="8">8×8</option>
+      <option value="16">16×16</option>
+      <option value="32">32×32</option>
+      <option value="64" selected>64×64</option>
+      <option value="128">128×128</option>
+    </select>
+    <label for="minRange">Min Brightness:</label>
+    <input type="number" id="minRange" value="0.03" step="0.001">
+    <label for="maxRange">Max Brightness:</label>
+    <input type="number" id="maxRange" value="0.8" step="0.001">
+    <label><input type="checkbox" id="showOverlay"> Show Out-of-Range Overlay</label>
+  </section>
+
+  <main id="workspace">
+    <canvas id="canvas"></canvas>
+    <aside id="sidebar">
+      <button onclick="toggleInfo(event)">⚠ PBR Compliance ▾</button>
+      <div id="pbrInfo" class="hidden">
+        <p><strong>Why PBR Accuracy Matters</strong><br>Accurate albedo ensures realism in real-time engines.</p>
+      </div>
+
+      <button onclick="toggleSettings(event)">Settings ▾</button>
+      <div id="settingsPanel" class="hidden">
+        <p>Settings above control analysis parameters.</p>
+      </div>
+
+      <div id="info">
+        <p><strong>Avg sRGB:</strong> <span id="avgRGB">-</span></p>
+        <p><strong>Brightness:</strong> <span id="brightness">-</span> <span id="status"></span></p>
+        <p id="materialSuggestion"></p>
+      </div>
+    </aside>
+  </main>
+
+  <footer>
+    <p id="explanation"><em>Brightness is calculated from linear RGB with Rec. 709 luminance coefficients.</em></p>
+  </footer>
+
   <script src="script.js"></script>
-  <script>
-    // JS for toggleInfo, toggleSettings, zoom/pan, drag & drop
-  </script>
 </body>
 </html>

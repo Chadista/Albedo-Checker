@@ -6,169 +6,99 @@ const brightnessEl = document.getElementById("brightness");
 const areaSizeSelect = document.getElementById("areaSize");
 
 let img = new Image();
-let imgLoaded = false;
 let areaSize = parseInt(areaSizeSelect.value);
-let displayScale = 1;
 let imageCanvas = document.createElement('canvas');
 let imageCtx = imageCanvas.getContext('2d');
 
-imageUpload.addEventListener("change", (e) => {
+imageUpload.addEventListener("change", e => {
   const file = e.target.files[0];
   if (!file) return;
-
   const reader = new FileReader();
-  reader.onload = function (evt) {
+  reader.onload = evt => {
     img.src = evt.target.result;
   };
   reader.readAsDataURL(file);
 });
 
-img.onload = function () {
-  let drawWidth = img.width;
-  let drawHeight = img.height;
-
-  if (drawWidth > 1024 || drawHeight > 1024) {
-    const scale = 1024 / Math.max(drawWidth, drawHeight);
-    drawWidth = Math.round(drawWidth * scale);
-    drawHeight = Math.round(drawHeight * scale);
-    displayScale = scale;
-  } else {
-    displayScale = 1;
-  }
-
+img.onload = () => {
+  const scale = Math.min(1024 / img.width, 1024 / img.height, 1);
+  const drawWidth = img.width * scale;
+  const drawHeight = img.height * scale;
   canvas.width = drawWidth;
   canvas.height = drawHeight;
   imageCanvas.width = drawWidth;
   imageCanvas.height = drawHeight;
-
-  imageCtx.clearRect(0, 0, drawWidth, drawHeight);
   imageCtx.drawImage(img, 0, 0, drawWidth, drawHeight);
-  ctx.drawImage(img, 0, 0, drawWidth, drawHeight);
-
-  imgLoaded = true;
+  drawImage();
 };
 
-canvas.addEventListener("mousemove", (e) => {
-  if (!imgLoaded) return;
+function drawImage() {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(imageCanvas, 0, 0);
+}
 
+canvas.addEventListener("mousemove", e => {
   const rect = canvas.getBoundingClientRect();
   const x = Math.floor(e.clientX - rect.left);
   const y = Math.floor(e.clientY - rect.top);
+  const size = areaSize;
+  const imgData = imageCtx.getImageData(x, y, size, size).data;
 
-  const halfSize = areaSize / 2;
-  const startX = Math.max(0, x - halfSize);
-  const startY = Math.max(0, y - halfSize);
-  const size = Math.min(areaSize, canvas.width - startX, canvas.height - startY);
-
-  const imgData = imageCtx.getImageData(startX, startY, size, size);
-  const data = imgData.data;
-
-  let rSrgbSum = 0, gSrgbSum = 0, bSrgbSum = 0;
-  let rLinSum = 0, gLinSum = 0, bLinSum = 0;
-  const totalPixels = size * size;
-
-  for (let i = 0; i < data.length; i += 4) {
-    const r = data[i];
-    const g = data[i + 1];
-    const b = data[i + 2];
-
-    const rNorm = r / 255;
-    const gNorm = g / 255;
-    const bNorm = b / 255;
-
-    rSrgbSum += r;
-    gSrgbSum += g;
-    bSrgbSum += b;
-
-    rLinSum += srgbToLinear(rNorm);
-    gLinSum += srgbToLinear(gNorm);
-    bLinSum += srgbToLinear(bNorm);
+  let r = 0, g = 0, b = 0;
+  for (let i = 0; i < imgData.length; i += 4) {
+    r += imgData[i];
+    g += imgData[i + 1];
+    b += imgData[i + 2];
   }
-
-  const rAvg = rSrgbSum / totalPixels;
-  const gAvg = gSrgbSum / totalPixels;
-  const bAvg = bSrgbSum / totalPixels;
+  const pixels = imgData.length / 4;
+  const rAvg = r / pixels;
+  const gAvg = g / pixels;
+  const bAvg = b / pixels;
   avgRGBEl.textContent = `${rAvg.toFixed(1)}, ${gAvg.toFixed(1)}, ${bAvg.toFixed(1)}`;
-
-  const rLinAvg = rLinSum / totalPixels;
-  const gLinAvg = gLinSum / totalPixels;
-  const bLinAvg = bLinSum / totalPixels;
-
-  const brightness = 0.2126 * rLinAvg + 0.7152 * gLinAvg + 0.0722 * bLinAvg;
+  const lin = v => v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+  const brightness = 0.2126 * lin(rAvg / 255) + 0.7152 * lin(gAvg / 255) + 0.0722 * lin(bAvg / 255);
   brightnessEl.textContent = brightness.toFixed(4);
   const suggestionEl = document.getElementById("materialSuggestion");
-  if (brightness < 0.04) {
-    suggestionEl.textContent = "Suggested: Charcoal, soot, black rubber";
-  } else if (brightness < 0.1) {
-    suggestionEl.textContent = "Suggested: Asphalt, dark fabric, soil";
-  } else if (brightness < 0.2) {
-    suggestionEl.textContent = "Suggested: Wood, leather, concrete";
-  } else if (brightness < 0.4) {
-    suggestionEl.textContent = "Suggested: Dry sand, bricks, skin tones";
-  } else if (brightness < 0.6) {
-    suggestionEl.textContent = "Suggested: Painted surfaces, plastic, cloth";
-  } else if (brightness < 0.8) {
-    suggestionEl.textContent = "Suggested: Snow, paper, light stone";
-  } else {
-    suggestionEl.textContent = "Suggested: Too bright – clamp or recheck";
-  }
-
-  const statusEl = document.getElementById("status");
-  const minRange = parseFloat(document.getElementById("minRange").value);
-  const maxRange = parseFloat(document.getElementById("maxRange").value);
-  if (brightness >= minRange && brightness <= maxRange) {
-    statusEl.textContent = "✔ In range";
-    statusEl.style.color = "#4CAF50";
-  } else {
-    statusEl.textContent = "✖ Out of range";
-    statusEl.style.color = "#F08080";
-  }
-
-  ctx.drawImage(imageCanvas, 0, 0);
-  ctx.strokeStyle = "red";
-  ctx.lineWidth = 1;
-  
-  const showOverlay = document.getElementById("showOverlay").checked;
-  if (showOverlay) {
-    const overlayImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const overlayData = overlayImage.data;
-    const imgFull = imageCtx.getImageData(0, 0, canvas.width, canvas.height).data;
-    const minRange = parseFloat(document.getElementById("minRange").value);
-    const maxRange = parseFloat(document.getElementById("maxRange").value);
-    for (let y = 0; y < canvas.height; y++) {
-      for (let x = 0; x < canvas.width; x++) {
-        const index = (y * canvas.width + x) * 4;
-        const r = imgFull[index] / 255;
-        const g = imgFull[index + 1] / 255;
-        const b = imgFull[index + 2] / 255;
-        const rLin = srgbToLinear(r);
-        const gLin = srgbToLinear(g);
-        const bLin = srgbToLinear(b);
-        const bright = 0.2126 * rLin + 0.7152 * gLin + 0.0722 * bLin;
-        if (bright < minRange) {
-          const check = ((x >> 2) + (y >> 2)) % 2 === 0;
-          overlayData[index] = check ? 255 : 255;
-          overlayData[index + 1] = check ? 0 : 255;
-          overlayData[index + 2] = check ? 0 : 255;
-          overlayData[index + 3] = 178;
-        } else if (bright > maxRange) {
-          const check = ((x >> 2) + (y >> 2)) % 2 === 0;
-          overlayData[index] = check ? 128 : 255;
-          overlayData[index + 1] = check ? 0 : 255;
-          overlayData[index + 2] = check ? 128 : 255;
-          overlayData[index + 3] = 178;
-        }
-      }
-    }
-    ctx.putImageData(overlayImage, 0, 0);
-  }
-  ctx.strokeRect(startX, startY, size, size);
+  suggestionEl.textContent = brightness < 0.04 ? "Suggested: Charcoal, soot"
+    : brightness < 0.1 ? "Suggested: Asphalt, dark fabric"
+    : brightness < 0.2 ? "Suggested: Wood, leather"
+    : brightness < 0.4 ? "Suggested: Brick, concrete"
+    : brightness < 0.6 ? "Suggested: Plastic, painted wall"
+    : brightness < 0.8 ? "Suggested: Paper, snow"
+    : "Too bright — clamp or adjust.";
 });
-
-function srgbToLinear(c) {
-  return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-}
 
 areaSizeSelect.addEventListener("change", () => {
   areaSize = parseInt(areaSizeSelect.value);
 });
+
+const dropZone = document.getElementById("dropZone");
+dropZone.addEventListener("dragover", e => {
+  e.preventDefault();
+  dropZone.classList.add("drag-hover");
+});
+dropZone.addEventListener("dragleave", e => {
+  e.preventDefault();
+  dropZone.classList.remove("drag-hover");
+});
+dropZone.addEventListener("drop", e => {
+  e.preventDefault();
+  dropZone.classList.remove("drag-hover");
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith("image/")) {
+    imageUpload.files = e.dataTransfer.files;
+    imageUpload.dispatchEvent(new Event("change"));
+  }
+});
+
+function toggleInfo(e) {
+  const el = document.getElementById("pbrInfo");
+  el.classList.toggle("hidden");
+  e.currentTarget.textContent = el.classList.contains("hidden") ? "⚠ PBR Compliance ▾" : "⚠ PBR Compliance ▴";
+}
+function toggleSettings(e) {
+  const el = document.getElementById("settingsPanel");
+  el.classList.toggle("hidden");
+  e.currentTarget.textContent = el.classList.contains("hidden") ? "Settings ▾" : "Settings ▴";
+}
