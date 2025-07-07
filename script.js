@@ -52,8 +52,8 @@ canvas.addEventListener("mousemove", (e) => {
   if (!imgLoaded) return;
 
   const rect = canvas.getBoundingClientRect();
-  const x = Math.floor(e.clientX - rect.left);
-  const y = Math.floor(e.clientY - rect.top);
+  const x = Math.floor((e.clientX - rect.left) / displayScale);
+  const y = Math.floor((e.clientY - rect.top) / displayScale);
 
   const halfSize = areaSize / 2;
   const startX = Math.max(0, x - halfSize);
